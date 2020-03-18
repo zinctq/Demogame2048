@@ -34,9 +34,11 @@ private:
 
 	std::shared_ptr<Sprite2D> m_BackGround;
 	std::shared_ptr<Text>  m_score;
+	std::shared_ptr<Text>  m_key;
 	std::vector < std::shared_ptr<Sprite2D>> m_listSprite2D;
 	std::vector < std::shared_ptr<SpriteAnimation>> m_listSpriteAnimations;
 	std::list<std::shared_ptr<GameButton>>	m_listButton;
-
+	std::shared_ptr<Sprite2D> m_tile[4][4];
+	std::shared_ptr<Sprite2D> m_value[4][4];
 };
 

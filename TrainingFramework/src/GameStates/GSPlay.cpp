@@ -14,7 +14,10 @@
 
 extern int screenWidth; //need get on Graphic engine
 extern int screenHeight; //need get on Graphic engine
-static int score;
+int score;
+extern bool clickstat;
+int keypressed;
+int value[4][4];
 
 GSPlay::GSPlay()
 {
@@ -29,9 +32,24 @@ GSPlay::~GSPlay()
 
 void GSPlay::Init()
 {
+	clickstat = 0;
+	score = 0;
+	for (int i = 0; i < 4; i++)
+		for (int j = 0; j < 4; j++)
+			value[i][j] = 0;
+	int a = rand() % 4;
+	int b = rand() % 4;
+	value[a][b] = 2;
+	a = rand() % 4;
+	b = rand() % 4;
+	while (value[a][b] == 2)
+	{
+		a = rand() % 4;
+		b = rand() % 4;
+	}
+	value[a][b] = 2;
 	auto model = ResourceManagers::GetInstance()->GetModel("Sprite2D");
-	auto texture = ResourceManagers::GetInstance()->GetTexture("bg2");
-
+	auto texture = ResourceManagers::GetInstance()->GetTexture("bgPlay");
 
 
 	//BackGround
@@ -40,13 +58,38 @@ void GSPlay::Init()
 	m_BackGround->Set2DPosition(screenWidth / 2, screenHeight / 2);
 	m_BackGround->SetSize(screenWidth, screenHeight);
 
+	for (int i=0; i<4;i++)
+		for (int j = 0; j < 4; j++)
+		{
+			texture = ResourceManagers::GetInstance()->GetTexture("titleBg");
+			m_tile[i][j] = std::make_shared<Sprite2D>(model, shader, texture);
+			m_tile[i][j]->Set2DPosition(90 + 100 * i, 250 + 100 * j);
+			m_tile[i][j]->SetSize(95, 95);
+		}
+	for (int i = 0; i < 4; i++)
+		for (int j = 0; j < 4; j++)
+		{
+			if (value[i][j] == 0) {
+				texture = ResourceManagers::GetInstance()->GetTexture("titleBg");
+				m_value[i][j] = std::make_shared<Sprite2D>(model, shader, texture);
+				m_value[i][j]->Set2DPosition(90 + 100 * i, 250 + 100 * j);
+				m_value[i][j]->SetSize(95, 95);
+			}
+			else if (value[i][j] == 2) {
+				texture = ResourceManagers::GetInstance()->GetTexture("title2");
+				m_value[i][j] = std::make_shared<Sprite2D>(model, shader, texture);
+				m_value[i][j]->Set2DPosition(90 + 100 * i, 250 + 100 * j);
+				m_value[i][j]->SetSize(95, 95);
+			}
+		}
+
 	//back button
 	texture = ResourceManagers::GetInstance()->GetTexture("back");
 	std::shared_ptr<GameButton> button = std::make_shared<GameButton>(model, shader, texture);
 	button->Set2DPosition(screenWidth / 4, 55);
 	button->SetSize(201, 93);
 	button->SetOnClick([]() {
-		GameStateMachine::GetInstance()->ChangeState(StateTypes::STATE_Menu);
+		GameStateMachine::GetInstance()->PopState();
 		});
 	m_listButton.push_back(button);
 
@@ -56,7 +99,7 @@ void GSPlay::Init()
 	button->Set2DPosition(screenWidth / 4 * 3, 55);
 	button->SetSize(201, 93);
 	button->SetOnClick([]() {
-		score++;
+		GameStateMachine::GetInstance()->PushState(StateTypes::STATE_Pause);
 		});
 	m_listButton.push_back(button);
 
@@ -66,6 +109,13 @@ void GSPlay::Init()
 	std::shared_ptr<Font> font = ResourceManagers::GetInstance()->GetFont("arialbd");
 	m_score = std::make_shared< Text>(shader, font, "Score: " + std::to_string(score) , TEXT_COLOR::WHILE, 1.8);
 	m_score->Set2DPosition(Vector2(5, 145));
+
+	shader = ResourceManagers::GetInstance()->GetShader("TextShader");
+	std::shared_ptr<Font> font2 = ResourceManagers::GetInstance()->GetFont("arialbd");
+	m_key = std::make_shared< Text>(shader, font2, "Key pressed: None", TEXT_COLOR::WHILE, 1.8);
+	m_key->Set2DPosition(Vector2(5, 245));
+
+
 
 	
 
@@ -104,16 +154,27 @@ void GSPlay::HandleEvents()
 
 void GSPlay::HandleKeyEvents(int key, bool bIsPressed)
 {
+	if (!clickstat) clickstat = 1;
+	else {
+		if (key == 40) {
 
-	
+
+		}
+		
+		clickstat = 0;
+	}
 }
 
 void GSPlay::HandleTouchEvents(int x, int y, bool bIsPressed)
 {
-	for (auto it : m_listButton)
-	{
-		(it)->HandleTouchEvents(x, y, bIsPressed);
-		if ((it)->IsHandle()) break;
+	if (!clickstat) clickstat = 1;
+	else {
+		for (auto it : m_listButton)
+		{
+			(it)->HandleTouchEvents(x, y, bIsPressed);
+			if ((it)->IsHandle()) break;
+		}
+		clickstat = 0;
 	}
 }
 
@@ -130,7 +191,8 @@ void GSPlay::Update(float deltaTime)
 		it->Update(deltaTime);
 	}
 
-	m_score->Update(deltaTime);
+	m_score->UpdateText(deltaTime, "Score: " + std::to_string(score));
+	m_key->UpdateText(deltaTime, "Key pressed: " + std::to_string(keypressed));
 }
 
 void GSPlay::Draw()
@@ -147,7 +209,15 @@ void GSPlay::Draw()
 		it->Draw();
 	}
 
+	for (int i = 0; i < 4; i++)
+		for (int j = 0; j < 4; j++)
+		{
+			m_tile[i][j]->Draw();
+			m_value[i][j]->Draw();
+		}
+
 	m_score->Draw();
+	//m_key->Draw();
 }
 
 void GSPlay::SetNewPostionForBullet()

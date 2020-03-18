@@ -5,7 +5,7 @@
 
 extern GLint screenWidth;
 extern GLint screenHeight;
-
+extern int score;
 
 void Text::CaculateWorldMatrix()
 {
@@ -113,11 +113,15 @@ void Text::Draw()
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Text::Update(GLfloat deltatime)
+void Text::UpdateText(GLfloat deltatime, std::string content)
 {
+	m_text = content;
 }
 
-
+void Text::Update(GLfloat deltatime)
+{
+	
+}
 
 void Text::setFont(std::shared_ptr<Font> font)
 {
